@@ -1,0 +1,59 @@
+import Link from "next/link";
+import { ShoppingCart, Heart } from "lucide-react";
+import { IProduct } from "@/models/Product";
+
+interface ProductCardProps {
+    product: Partial<IProduct> & { _id: string }; // flexible type
+}
+
+export default function ProductCard({ product }: ProductCardProps) {
+    const discountPercentage = product.discountPrice
+        ? Math.round(((product.price! - product.discountPrice) / product.price!) * 100)
+        : 0;
+
+    return (
+        <div className="group bg-white rounded-lg border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
+                <img
+                    src={product.images?.[0] || "/placeholder.jpg"}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {discountPercentage > 0 && (
+                    <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-sm">
+                        {discountPercentage}% OFF
+                    </span>
+                )}
+                <button className="absolute top-2 right-2 p-2 bg-white rounded-full text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                    <Heart size={18} />
+                </button>
+            </div>
+
+            <div className="p-4">
+                <h3 className="text-gray-900 font-medium text-lg leading-tight truncate mb-1">
+                    <Link href={`/product/${product.slug}`}>
+                        <span aria-hidden="true" className="absolute inset-0" />
+                        {product.name}
+                    </Link>
+                </h3>
+                <p className="text-gray-500 text-sm mb-3">{product.category}</p>
+
+                <div className="flex items-end justify-between">
+                    <div>
+                        {product.discountPrice ? (
+                            <div className="flex flex-col">
+                                <span className="text-gray-400 line-through text-sm">₹{product.price}</span>
+                                <span className="text-secondary font-bold text-lg">₹{product.discountPrice}</span>
+                            </div>
+                        ) : (
+                            <span className="text-gray-900 font-bold text-lg">₹{product.price}</span>
+                        )}
+                    </div>
+                    <button className="relative z-10 p-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+                        <ShoppingCart size={20} />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
