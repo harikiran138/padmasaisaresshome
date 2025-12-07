@@ -20,17 +20,17 @@ export async function GET() {
         await Review.deleteMany();
 
         // 2. Create Users
-        const hashedPassword = await bcrypt.hash("admin", 10);
+        const hashedPassword = await bcrypt.hash("password123", 10);
         const adminUser = await User.create({
             name: "Admin User",
-            email: "admin@admin.com",
+            email: "admin@example.com",
             password: hashedPassword,
             role: "admin",
         });
 
         const demoUser = await User.create({
-            name: "John Doe",
-            email: "user@example.com",
+            name: "Test User",
+            email: "test@example.com",
             password: hashedPassword,
             role: "customer",
             addresses: [

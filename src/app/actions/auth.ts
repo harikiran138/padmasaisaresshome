@@ -36,14 +36,12 @@ export async function registerUser(formData: FormData) {
         // Let's try to sign in here. If it throws a redirect, we might need to catch it 
         // or handle it on client. `signIn` usually throws.
         try {
+            // Attempt to sign in
             await signIn("credentials", { email, password, redirect: false });
         } catch (err) {
-            // signIn throws error on success if redirect is true, but we set redirect: false
-            // However, we still might want to catch potential auth errors
-            console.error("Auto-login failed:", err);
-            // Even if auto-login fails, registration was successful.
-            // We can return success and let client redirect to login if needed, 
-            // but ideally we want auto-login.
+            console.error("Auto-login failed after registration:", err);
+            // Ignore error here, let the user sign in manually if auto-login fails
+            // It's better than showing a registration error when registration actually succeeded.
         }
 
         return { success: true };

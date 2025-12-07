@@ -24,17 +24,27 @@ async function connectToDatabase() {
         throw new Error('Please define the MONGODB_URI environment variable inside .env');
     }
 
-    if (cached!.conn) {
+    if (cached!.conn && cached!.conn.connection.readyState === 1) {
         return cached!.conn;
     }
 
     if (!cached!.promise) {
         const opts = {
-            bufferCommands: false,
+            bufferCommands: false, // Changed to false to fail fast
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
         };
 
+        mongoose.set('strictQuery', true);
+        mongoose.set('bufferCommands', false);
+
+        console.log("Connecting to MongoDB...");
         cached!.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+            console.log("MongoDB Connected Successfully");
             return mongoose;
+        }).catch((err) => {
+            console.error("MongoDB Connection Error:", err);
+            throw err;
         });
     }
 
