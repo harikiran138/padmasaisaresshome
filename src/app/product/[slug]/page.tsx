@@ -9,6 +9,11 @@ interface ProductPageProps {
     params: Promise<{ slug: string }> | { slug: string };
 }
 
+import Review from "@/models/Review";
+import ProductReviews from "@/components/shop/ProductReviews";
+
+// ... (keep imports)
+
 export default async function ProductPage({ params }: ProductPageProps) {
     const resolvedParams = params instanceof Promise ? await params : await Promise.resolve(params); // Next.js 15
     const { slug } = resolvedParams;
@@ -19,6 +24,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
     if (!product) {
         notFound();
     }
+
+    // Fetch Reviews
+    const reviews = await Review.find({ product: product._id }).sort({ createdAt: -1 }).lean();
+    const serializedReviews = reviews.map((r: any) => ({
+        ...r,
+        _id: r._id.toString(),
+        user: r.user.toString(),
+        product: r.product.toString(),
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+    }));
 
     const serializedProduct = {
         ...product,
@@ -48,16 +64,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
                             {serializedProduct.name}
                         </h1>
 
-                        {/* Ratings Placeholder */}
+                        {/* Real Ratings */}
                         <div className="flex items-center space-x-2 mb-6">
                             <div className="flex text-yellow-500">
-                                <Star size={18} fill="currentColor" />
-                                <Star size={18} fill="currentColor" />
-                                <Star size={18} fill="currentColor" />
-                                <Star size={18} fill="currentColor" />
-                                <Star size={18} fill="currentColor" className="text-gray-300" />
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <Star
+                                        key={star}
+                                        size={18}
+                                        fill={star <= (serializedProduct.averageRating || 0) ? "currentColor" : "none"}
+                                        className={star <= (serializedProduct.averageRating || 0) ? "" : "text-gray-300"}
+                                    />
+                                ))}
                             </div>
-                            <span className="text-gray-500 text-sm">(24 reviews)</span>
+                            <span className="text-gray-500 text-sm">({serializedProduct.numReviews || 0} reviews)</span>
                         </div>
 
                         <ProductActions product={serializedProduct} />
@@ -81,6 +100,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         </div>
                     </div>
                 </div>
+
+                {/* Reviews Section */}
+                <ProductReviews productId={serializedProduct._id} reviews={serializedReviews} />
             </div>
         </div>
     );

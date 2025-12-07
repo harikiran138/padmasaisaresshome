@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Star } from "lucide-react";
 import { IProduct } from "@/models/Product";
 
 interface ProductCardProps {
@@ -36,7 +36,18 @@ export default function ProductCard({ product }: ProductCardProps) {
                         {product.name}
                     </Link>
                 </h3>
-                <p className="text-gray-500 text-sm mb-3">{product.category}</p>
+                <p className="text-gray-500 text-sm mb-2">{product.category}</p>
+
+                {/* Rating */}
+                <div className="flex items-center space-x-1 mb-3">
+                    <div className="flex text-yellow-400">
+                        <Star size={14} fill={product.averageRating && product.averageRating >= 4 ? "currentColor" : "none"} className={product.averageRating && product.averageRating >= 4 ? "" : "text-gray-300"} />
+                        <span className="text-xs text-gray-500 ml-1 font-medium">{product.averageRating ? product.averageRating.toFixed(1) : "New"}</span>
+                    </div>
+                    {product.numReviews ? (
+                        <span className="text-xs text-gray-400">({product.numReviews})</span>
+                    ) : null}
+                </div>
 
                 <div className="flex items-end justify-between">
                     <div>

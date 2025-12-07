@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { IndianRupee, ShoppingCart, Package, Users } from "lucide-react";
 import User from "@/models/User";
 
+import SeedButton from "@/components/admin/SeedButton";
+
 export default async function AdminDashboard() {
     const session = await auth();
     if (session?.user?.role !== "admin") {
@@ -28,7 +30,10 @@ export default async function AdminDashboard() {
 
     return (
         <div>
-            <h1 className="text-2xl font-bold mb-8">Dashboard Overview</h1>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+                <SeedButton />
+            </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -107,8 +112,8 @@ export default async function AdminDashboard() {
                                     <td className="py-3 text-sm font-medium">₹{order.totalPrice}</td>
                                     <td className="py-3 text-sm">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                                                order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                                                    'bg-yellow-100 text-yellow-700'
+                                            order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                                'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {order.status}
                                         </span>

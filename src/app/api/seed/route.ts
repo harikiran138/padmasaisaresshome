@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
 import Product from "@/models/Product";
 import bcrypt from "bcryptjs";
+import Review from "@/models/Review";
 
 export async function GET() {
     try {
@@ -11,12 +12,13 @@ export async function GET() {
         // Clear existing data
         await User.deleteMany();
         await Product.deleteMany();
+        await Review.deleteMany();
 
         // Create Admin User
-        const hashedPassword = await bcrypt.hash("123456", 10);
+        const hashedPassword = await bcrypt.hash("admin", 10);
         const adminUser = await User.create({
             name: "Admin User",
-            email: "admin@example.com",
+            email: "admin@admin.com",
             password: hashedPassword,
             role: "admin",
         });
@@ -117,12 +119,39 @@ export async function GET() {
             },
         ];
 
-        await Product.insertMany(products);
+        const createdProducts = await Product.insertMany(products);
+
+        // Generate Reviews
+        let reviewCount = 0;
+        for (const product of createdProducts) {
+            const numReviews = Math.floor(Math.random() * 6); // 0-5 reviews
+            if (numReviews > 0) {
+                let totalRating = 0;
+                for (let i = 0; i < numReviews; i++) {
+                    const rating = Math.floor(Math.random() * 2) + 4; // 4 or 5 stars mostly
+                    totalRating += rating;
+
+                    await Review.create({
+                        user: demoUser._id,
+                        product: product._id,
+                        name: demoUser.name,
+                        rating: rating,
+                        comment: "Great product! Really satisfied with the quality and delivery.",
+                    });
+                    reviewCount++;
+                }
+
+                product.numReviews = numReviews;
+                product.averageRating = totalRating / numReviews;
+                await product.save();
+            }
+        }
 
         return NextResponse.json({
-            message: "Database seeded successfully",
+            message: "Database seeded successfully with Reviews",
             users: { admin: adminUser.email, user: demoUser.email },
             productCount: products.length,
+            reviewCount,
         });
     } catch (error) {
         console.error("Seeding error:", error);

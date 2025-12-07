@@ -13,6 +13,8 @@ export interface IProduct extends Document {
     stock: number;
     isFeatured: boolean;
     isBestSeller: boolean;
+    averageRating: number;
+    numReviews: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -31,6 +33,8 @@ const ProductSchema = new Schema<IProduct>(
         stock: { type: Number, required: true, default: 0 },
         isFeatured: { type: Boolean, default: false },
         isBestSeller: { type: Boolean, default: false },
+        averageRating: { type: Number, default: 0 },
+        numReviews: { type: Number, default: 0 },
     },
     { timestamps: true }
 );
