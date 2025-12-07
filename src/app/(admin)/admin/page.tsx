@@ -31,7 +31,7 @@ export default async function AdminDashboard() {
     return (
         <div>
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+                <h1 className="text-2xl font-bold text-black">Dashboard Overview</h1>
                 <SeedButton />
             </div>
 
@@ -40,7 +40,7 @@ export default async function AdminDashboard() {
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Total Revenue</p>
+                            <p className="text-sm text-gray-500 mb-1 font-medium text-black">Total Revenue</p>
                             <h3 className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</h3>
                         </div>
                         <div className="p-3 bg-green-50 rounded-full text-green-600">
@@ -52,7 +52,7 @@ export default async function AdminDashboard() {
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Total Orders</p>
+                            <p className="text-sm text-gray-500 mb-1 font-medium text-black">Total Orders</p>
                             <h3 className="text-2xl font-bold">{totalOrders}</h3>
                         </div>
                         <div className="p-3 bg-blue-50 rounded-full text-blue-600">
@@ -64,7 +64,7 @@ export default async function AdminDashboard() {
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Total Products</p>
+                            <p className="text-sm text-gray-500 mb-1 font-medium text-black">Total Products</p>
                             <h3 className="text-2xl font-bold">{totalProducts}</h3>
                         </div>
                         <div className="p-3 bg-purple-50 rounded-full text-purple-600">
@@ -76,7 +76,7 @@ export default async function AdminDashboard() {
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-500 mb-1">Total Users</p>
+                            <p className="text-sm text-gray-500 mb-1 font-medium text-black">Total Users</p>
                             <h3 className="text-2xl font-bold">{totalUsers}</h3>
                         </div>
                         <div className="p-3 bg-orange-50 rounded-full text-orange-600">
@@ -93,11 +93,11 @@ export default async function AdminDashboard() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-gray-100 text-gray-500 text-sm">
-                                <th className="pb-3 text-left pl-4">Order ID</th>
-                                <th className="pb-3 text-left">Customer</th>
-                                <th className="pb-3 text-left">Amount</th>
-                                <th className="pb-3 text-left">Status</th>
-                                <th className="pb-3 text-left">Date</th>
+                                <th className="pb-3 text-left pl-4 text-black">Order ID</th>
+                                <th className="pb-3 text-left text-black">Customer</th>
+                                <th className="pb-3 text-left text-black">Amount</th>
+                                <th className="pb-3 text-left text-black">Status</th>
+                                <th className="pb-3 text-left text-black">Date</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">

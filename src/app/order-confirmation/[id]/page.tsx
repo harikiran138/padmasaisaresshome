@@ -1,59 +1,34 @@
-import connectToDatabase from "@/lib/db";
-import Order from "@/models/Order";
+
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 
-interface PageProps {
-    params: Promise<{ id: string }> | { id: string };
-}
-
-export default async function OrderConfirmationPage({ params }: PageProps) {
-    const resolvedParams = params instanceof Promise ? await params : await Promise.resolve(params);
-    const { id } = resolvedParams;
-
-    await connectToDatabase();
-    const order = await Order.findById(id).lean();
-
-    if (!order) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>Order not found.</p>
-            </div>
-        );
-    }
-
-    // Calculate estimated delivery
-    const deliveryDate = new Date();
-    deliveryDate.setDate(deliveryDate.getDate() + 5);
-
+export default function OrderConfirmationPage({ params }: { params: { id: string } }) {
     return (
-        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-sm text-center">
-                <div className="flex justify-center mb-6">
-                    <CheckCircle className="text-green-500 w-16 h-16" />
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div className="bg-white p-8 rounded-lg shadow-sm max-w-md w-full text-center">
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+                    <CheckCircle className="h-10 w-10 text-green-600" />
                 </div>
-
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+                <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Order Confirmed!</h2>
                 <p className="text-gray-500 mb-8">
-                    Thank you for shopping with Padma Sai Sarees Home. Your order ID is <span className="font-mono font-medium text-gray-900">#{order._id.toString()}</span>.
+                    Thank you for your purchase. We have received your order request.<br />
+                    Order ID: <span className="font-mono text-gray-900 font-bold">#{params.id.slice(-6).toUpperCase()}</span>
                 </p>
 
-                <div className="bg-gray-50 p-6 rounded-md mb-8 text-left">
-                    <h3 className="font-bold text-gray-900 mb-4">Order Details</h3>
-                    <div className="space-y-2 text-sm text-gray-600">
-                        <p><span className="font-medium">Amount Paid:</span> ₹{order.totalPrice}</p>
-                        <p><span className="font-medium">Payment Method:</span> {order.paymentMethod}</p>
-                        <p><span className="font-medium">Estimated Delivery:</span> {deliveryDate.toDateString()}</p>
-                        <p><span className="font-medium">Shipping To:</span> {order.shippingAddress?.street}, {order.shippingAddress?.city}</p>
-                    </div>
+                <div className="space-y-4">
+                    <Link
+                        href="/account?tab=orders"
+                        className="block w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    >
+                        View Order Details
+                    </Link>
+                    <Link
+                        href="/"
+                        className="block w-full py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                    >
+                        Continue Shopping
+                    </Link>
                 </div>
-
-                <Link
-                    href="/shop"
-                    className="inline-block px-8 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary/90 transition-colors"
-                >
-                    Continue Shopping
-                </Link>
             </div>
         </div>
     );

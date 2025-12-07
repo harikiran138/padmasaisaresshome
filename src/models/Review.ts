@@ -3,22 +3,22 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IReview extends Document {
     user: mongoose.Types.ObjectId;
     product: mongoose.Types.ObjectId;
-    name: string; // Reviewer name
     rating: number;
-    comment: string;
+    comment?: string;
     createdAt: Date;
     updatedAt: Date;
 }
 
 const ReviewSchema = new Schema<IReview>(
     {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-        name: { type: String, required: true },
-        rating: { type: Number, required: true, default: 0 },
-        comment: { type: String, required: true },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true, index: true },
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        comment: { type: String, trim: true },
     },
     { timestamps: true }
 );
+
+ReviewSchema.index({ product: 1, user: 1 }, { unique: true });
 
 export default mongoose.models.Review || mongoose.model<IReview>("Review", ReviewSchema);

@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
+import "./globals.css";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
-import { CartProvider } from "@/components/shared/CartProvider";
-import { SessionProvider } from "@/components/shared/SessionProvider";
-import "./globals.css";
+import { CartProvider } from "@/components/shop/CartProvider";
+import { SessionProvider } from "next-auth/react";
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  variable: "--font-outfit",
-});
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
   title: "Padma Sai Sarees Home",
-  description: "Everyday fashion. Everyday you.",
+  description: "Exclusive collection of sarees and modern ethnic wear.",
 };
 
 export default function RootLayout({
@@ -23,14 +21,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${outfit.variable} antialiased font-sans flex flex-col min-h-screen`}>
-        <CartProvider>
-          <SessionProvider>
+      <body className={`${inter.variable} ${playfair.variable} font-sans bg-gray-50 text-gray-900`}>
+        <SessionProvider>
+          <CartProvider>
             <Navbar />
-            <main className="flex-grow">{children}</main>
+            <main className="min-h-screen">
+              {children}
+            </main>
             <Footer />
-          </SessionProvider>
-        </CartProvider>
+          </CartProvider>
+        </SessionProvider>
       </body>
     </html>
   );

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Menu, X, ShoppingCart, User, Search, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCart } from "./CartProvider";
+import { useCart } from "@/components/shop/CartProvider";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Navbar() {

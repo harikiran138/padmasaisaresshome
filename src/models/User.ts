@@ -1,42 +1,70 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IAddress {
+    label: string;
+    fullName?: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    pincode: string;
+    country: string;
+    phone: string;
+    isDefault: boolean;
+}
+
 export interface IUser extends Document {
     name: string;
     email: string;
     password?: string;
-    role: "user" | "admin";
+    role: "user" | "admin" | "customer";
     image?: string;
-    address?: {
-        street: string;
+    addresses?: {
+        label: string;
+        fullName?: string;
+        line1: string;
+        line2?: string;
         city: string;
         state: string;
-        zip: string;
+        pincode: string;
         country: string;
+        phone: string;
+        isDefault: boolean;
     }[];
     wishlist?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
 
+const AddressSchema = new Schema<IAddress>(
+    {
+        label: { type: String, default: "Home" },
+        fullName: { type: String },
+        line1: { type: String, required: true },
+        line2: { type: String },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        pincode: { type: String, required: true },
+        country: { type: String, default: "India" },
+        phone: { type: String, required: true },
+        isDefault: { type: Boolean, default: false },
+    },
+    { _id: false }
+);
+
 const UserSchema = new Schema<IUser>(
     {
-        name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        password: { type: String, select: false },
-        role: { type: String, enum: ["user", "admin"], default: "user" },
+        name: { type: String, required: true, trim: true },
+        email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+        password: { type: String, select: false, required: true },
+        role: { type: String, enum: ["user", "admin", "customer"], default: "customer" }, // customer added to align with user
         image: { type: String },
-        address: [
-            {
-                street: String,
-                city: String,
-                state: String,
-                zip: String,
-                country: String,
-            },
-        ],
+        addresses: [AddressSchema],
         wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     },
     { timestamps: true }
 );
+
+UserSchema.index({ email: 1 }, { unique: true });
 
 export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

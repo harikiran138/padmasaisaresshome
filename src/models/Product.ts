@@ -7,7 +7,16 @@ export interface IProduct extends Document {
     price: number;
     discountPrice?: number;
     images: string[];
-    category: string;
+    category: mongoose.Types.ObjectId; // Changed to ObjectId
+    brand: string;
+    variants: {
+        sku?: string;
+        size?: string;
+        color?: string;
+        additionalPrice: number;
+        stock: number;
+    }[];
+    attributes?: Map<string, string>;
     sizes: string[];
     colors: string[];
     stock: number;
@@ -15,9 +24,22 @@ export interface IProduct extends Document {
     isBestSeller: boolean;
     averageRating: number;
     numReviews: number;
+    currency: string;
+    isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
+
+const variantSchema = new Schema(
+    {
+        sku: String,
+        size: String,
+        color: String,
+        additionalPrice: { type: Number, default: 0 },
+        stock: { type: Number, default: 0 },
+    },
+    { _id: false }
+);
 
 const ProductSchema = new Schema<IProduct>(
     {
@@ -25,12 +47,27 @@ const ProductSchema = new Schema<IProduct>(
         slug: { type: String, required: true, unique: true },
         description: { type: String, required: true },
         price: { type: Number, required: true },
+        currency: { type: String, default: "INR" },
         discountPrice: { type: Number },
-        images: [{ type: String }],
-        category: { type: String, required: true },
+        images: [{ type: String, required: true }],
+        category: { type: Schema.Types.ObjectId, ref: "Category", required: true, index: true },
+        brand: { type: String, default: "No Brand" },
+
+        // Variants
+        variants: [variantSchema],
+
+        // Dynamic Attributes (e.g., Material: Cotton)
+        attributes: {
+            type: Map,
+            of: String,
+        },
+
+        // Legacy/Direct fields (optional if moving fully to variants, but keeping for simple products)
         sizes: [{ type: String }],
         colors: [{ type: String }],
-        stock: { type: Number, required: true, default: 0 },
+        stock: { type: Number, required: true, default: 0, min: 0 },
+
+        isActive: { type: Boolean, default: true, index: true },
         isFeatured: { type: Boolean, default: false },
         isBestSeller: { type: Boolean, default: false },
         averageRating: { type: Number, default: 0 },
@@ -38,5 +75,7 @@ const ProductSchema = new Schema<IProduct>(
     },
     { timestamps: true }
 );
+
+ProductSchema.index({ name: "text", description: "text", brand: "text" });
 
 export default mongoose.models.Product || mongoose.model<IProduct>("Product", ProductSchema);

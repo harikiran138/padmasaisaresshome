@@ -95,15 +95,20 @@ export default function AccountTabs({ orders, wishlist, user }: AccountTabsProps
                                                 </p>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                                                    order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                                                        'bg-yellow-100 text-yellow-700'
+                                                order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                                    'bg-yellow-100 text-yellow-700'
                                                 }`}>
-                                                {order.status}
+                                                {order.orderStatus || order.status}
                                             </span>
                                         </div>
                                         <div className="border-t border-gray-50 pt-4 flex justify-between items-center">
                                             <span className="font-medium text-gray-900">Total Amount</span>
-                                            <span className="font-bold text-lg">₹{order.totalPrice}</span>
+                                            <div className="flex items-center gap-4">
+                                                <span className="font-bold text-lg">₹{order.totalAmount || order.totalPrice}</span>
+                                                <a href={`/account/orders/${order._id}`} className="text-sm text-primary hover:underline font-medium">
+                                                    View Details
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

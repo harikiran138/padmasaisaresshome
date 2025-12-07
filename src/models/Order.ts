@@ -1,110 +1,101 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IOrder extends Document {
-    user?: mongoose.Types.ObjectId;
-    guestInfo?: {
-        name: string;
-        email: string;
-        phone: string;
-        address: {
-            street: string;
-            city: string;
-            state: string;
-            zip: string;
-            country: string;
-        };
-    };
-    orderItems: {
+    user: mongoose.Types.ObjectId;
+    items: {
         product: mongoose.Types.ObjectId;
         name: string;
-        image: string;
-        price: number;
-        quantity: number;
         size?: string;
         color?: string;
+        quantity: number;
+        price: number;
     }[];
+    subtotal: number;
+    shippingFee: number;
+    totalAmount: number;
+    currency: string;
+    paymentMethod: "COD" | "RAZORPAY" | "STRIPE";
+    paymentStatus: "PENDING" | "PAID" | "FAILED" | "REFUNDED";
+    orderStatus: "PLACED" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
     shippingAddress: {
-        street: string;
+        fullName: string;
+        line1: string;
+        line2?: string;
         city: string;
         state: string;
-        zip: string;
+        pincode: string;
         country: string;
+        phone: string;
     };
-    paymentMethod: string;
-    paymentResult?: {
-        id: string;
-        status: string;
-        update_time: string;
-        email_address: string;
-    };
-    itemsPrice: number;
-    shippingPrice: number;
-    taxPrice: number;
-    totalPrice: number;
-    isPaid: boolean;
-    paidAt?: Date;
-    isDelivered: boolean;
-    deliveredAt?: Date;
-    status: "Pending" | "Processing" | "Shipped" | "Delivered" | "Cancelled";
+    paymentId?: string;
+    paymentOrderId?: string;
+    paymentSignature?: string;
     createdAt: Date;
     updatedAt: Date;
 }
 
+const shippingAddressSchema = new Schema(
+    {
+        fullName: { type: String, required: true },
+        line1: { type: String, required: true },
+        line2: { type: String },
+        city: { type: String, required: true },
+        state: { type: String, required: true },
+        pincode: { type: String, required: true },
+        country: { type: String, default: "India" },
+        phone: { type: String, required: true },
+    },
+    { _id: false }
+);
+
+const orderItemSchema = new Schema(
+    {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+        name: { type: String, required: true },
+        size: { type: String },
+        color: { type: String },
+        quantity: { type: Number, required: true, min: 1 },
+        price: { type: Number, required: true, min: 0 },
+    },
+    { _id: false }
+);
+
 const OrderSchema = new Schema<IOrder>(
     {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        guestInfo: {
-            name: String,
-            email: String,
-            phone: String,
-            address: {
-                street: String,
-                city: String,
-                state: String,
-                zip: String,
-                country: String,
-            },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+        items: {
+            type: [orderItemSchema],
+            validate: (v: any[]) => v.length > 0,
         },
-        orderItems: [
-            {
-                product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-                name: { type: String, required: true },
-                image: { type: String, required: true },
-                price: { type: Number, required: true },
-                quantity: { type: Number, required: true },
-                size: { type: String },
-                color: { type: String },
-            },
-        ],
-        shippingAddress: {
-            street: { type: String, required: true },
-            city: { type: String, required: true },
-            state: { type: String, required: true },
-            zip: { type: String, required: true },
-            country: { type: String, required: true },
-        },
-        paymentMethod: { type: String, required: true },
-        paymentResult: {
-            id: String,
-            status: String,
-            update_time: String,
-            email_address: String,
-        },
-        itemsPrice: { type: Number, required: true, default: 0.0 },
-        shippingPrice: { type: Number, required: true, default: 0.0 },
-        taxPrice: { type: Number, required: true, default: 0.0 },
-        totalPrice: { type: Number, required: true, default: 0.0 },
-        isPaid: { type: Boolean, required: true, default: false },
-        paidAt: { type: Date },
-        isDelivered: { type: Boolean, required: true, default: false },
-        deliveredAt: { type: Date },
-        status: {
+        subtotal: { type: Number, required: true, min: 0 },
+        shippingFee: { type: Number, required: true, min: 0, default: 0 },
+        totalAmount: { type: Number, required: true, min: 0 },
+        currency: { type: String, default: "INR" },
+        paymentMethod: {
             type: String,
-            enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
-            default: "Pending",
+            enum: ["COD", "RAZORPAY", "STRIPE"],
+            default: "COD",
         },
+        paymentStatus: {
+            type: String,
+            enum: ["PENDING", "PAID", "FAILED", "REFUNDED"],
+            default: "PENDING",
+            index: true,
+        },
+        orderStatus: {
+            type: String,
+            enum: ["PLACED", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"],
+            default: "PLACED",
+            index: true,
+        },
+        shippingAddress: { type: shippingAddressSchema, required: true },
+        paymentId: { type: String },
+        paymentOrderId: { type: String },
+        paymentSignature: { type: String },
     },
     { timestamps: true }
 );
+
+OrderSchema.index({ createdAt: -1 });
 
 export default mongoose.models.Order || mongoose.model<IOrder>("Order", OrderSchema);
