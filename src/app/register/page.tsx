@@ -9,7 +9,7 @@ export default function RegisterPage() {
             {/* Left Side: Image/Branding */}
             <div className="hidden lg:flex w-1/2 relative bg-primary">
                 <Image
-                    src="https://images.unsplash.com/photo-1627916960814-68f71092a92c?q=80&w=1974&auto=format&fit=crop"
+                    src="https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=1968&auto=format&fit=crop"
                     alt="Elegant Silk Fabric"
                     fill
                     className="object-cover opacity-80 mix-blend-overlay"
