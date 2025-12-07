@@ -38,7 +38,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </Link>
                 </h3>
                 <p className="text-gray-500 text-sm mb-1">{product.brand || "No Brand"}</p>
-                <p className="text-xs text-gray-400 mb-2">{product.category}</p>
+                <p className="text-xs text-gray-400 mb-2">
+                    {(product.category as any)?.name || (typeof product.category === 'string' ? product.category : "")}
+                </p>
 
                 {/* Rating */}
                 <div className="flex items-center space-x-1 mb-3">

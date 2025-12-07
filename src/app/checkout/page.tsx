@@ -1,6 +1,6 @@
 "use client";
 
-import { useCart } from "@/components/shared/CartProvider";
+import { useCart } from "@/components/shop/CartProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; // Added missing import
