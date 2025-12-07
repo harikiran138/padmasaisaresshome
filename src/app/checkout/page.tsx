@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link"; // Added missing import
 
 export default function CheckoutPage() {
-    const { cartItems, cartTotal, clearCart } = useCart();
+    const { cartItems, subtotal: cartTotal, clearCart } = useCart();
     const router = useRouter();
     const [isProcessing, setIsProcessing] = useState(false);
 
