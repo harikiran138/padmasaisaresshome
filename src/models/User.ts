@@ -13,6 +13,7 @@ export interface IUser extends Document {
         zip: string;
         country: string;
     }[];
+    wishlist?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -33,6 +34,7 @@ const UserSchema = new Schema<IUser>(
                 country: String,
             },
         ],
+        wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     },
     { timestamps: true }
 );

@@ -147,8 +147,14 @@ export async function GET() {
             }
         }
 
+        // Add to Wishlist for Demo User
+        if (createdProducts.length > 0) {
+            const wishlistItems = createdProducts.slice(0, 3).map(p => p._id);
+            await User.findByIdAndUpdate(demoUser._id, { wishlist: wishlistItems });
+        }
+
         return NextResponse.json({
-            message: "Database seeded successfully with Reviews",
+            message: "Database seeded successfully with Reviews & Wishlist",
             users: { admin: adminUser.email, user: demoUser.email },
             productCount: products.length,
             reviewCount,

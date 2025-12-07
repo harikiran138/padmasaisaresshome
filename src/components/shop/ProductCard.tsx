@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShoppingCart, Heart, Star } from "lucide-react";
 import { IProduct } from "@/models/Product";
+import WishlistButton from "../shared/WishlistButton";
 
 interface ProductCardProps {
     product: Partial<IProduct> & { _id: string }; // flexible type
@@ -24,9 +25,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                         {discountPercentage}% OFF
                     </span>
                 )}
-                <button className="absolute top-2 right-2 p-2 bg-white rounded-full text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                    <Heart size={18} />
-                </button>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                    <WishlistButton productId={product._id} />
+                </div>
             </div>
 
             <div className="p-4">

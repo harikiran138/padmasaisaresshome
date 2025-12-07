@@ -59,18 +59,40 @@ export default function Navbar() {
                     {/* Desktop Nav Actions */}
                     <div className="hidden md:flex items-center space-x-6">
                         {session ? (
-                            <div className="flex items-center space-x-4">
-                                <Link href="/account" className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors">
-                                    <User size={20} />
-                                    <span className="font-medium text-sm">Account</span>
-                                </Link>
-                                <button
-                                    onClick={() => signOut()}
-                                    className="text-gray-400 hover:text-red-500 transition-colors"
-                                    title="Sign Out"
-                                >
-                                    <LogOut size={20} />
+                            <div className="relative group">
+                                <button className="flex items-center space-x-1 text-left">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-500 leading-none">Hello, {session.user.name?.split(" ")[0]}</span>
+                                        <span className="font-bold text-gray-900 leading-none">Account & Lists</span>
+                                    </div>
                                 </button>
+
+                                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                    <div className="bg-white rounded-md shadow-lg border border-gray-100 w-48 py-2 overflow-hidden">
+                                        <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                                            Your Account
+                                        </Link>
+                                        <Link href="/account?tab=orders" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                                            Your Orders
+                                        </Link>
+                                        <Link href="/account?tab=wishlist" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary">
+                                            Your Wishlist
+                                        </Link>
+                                        {session.user.role === 'admin' && (
+                                            <Link href="/admin" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary font-bold">
+                                                Admin Dashboard
+                                            </Link>
+                                        )}
+                                        <div className="border-t border-gray-100 mt-1 pt-1">
+                                            <button
+                                                onClick={() => signOut()}
+                                                className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                                            >
+                                                Sign Out
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex items-center space-x-4 text-sm font-medium">
