@@ -20,6 +20,7 @@ interface CartContextType {
     addToCart: (productId: string, quantity: number, size?: string, color?: string) => Promise<boolean>;
     updateQuantity: (productId: string, quantity: number, size: string, color: string) => Promise<void>;
     removeFromCart: (productId: string, size: string, color: string) => Promise<void>;
+    clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -87,6 +88,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const clearCart = async () => {
+        setCartItems([]);
+        try {
+            // Optional: Call API if you have a clear cart endpoint, or relying on checkout to clear backend
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
     const subtotal = cartItems.reduce((acc, item) => {
         const price = item.product.discountPrice || item.product.price;
@@ -95,7 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, 0);
 
     return (
-        <CartContext.Provider value={{ cartItems, cartCount, subtotal, refreshCart, addToCart, updateQuantity, removeFromCart }}>
+        <CartContext.Provider value={{ cartItems, cartCount, subtotal, refreshCart, addToCart, updateQuantity, removeFromCart, clearCart }}>
             {children}
         </CartContext.Provider>
     );
