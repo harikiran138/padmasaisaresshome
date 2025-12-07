@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+
 import Link from "next/link";
+import { signIn } from "@/auth";
 import connectToDatabase from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
@@ -33,7 +34,8 @@ export default function RegisterPage() {
             password: hashedPassword,
         });
 
-        redirect("/login");
+        // Auto-login after registration
+        await signIn("credentials", { email, password, redirectTo: "/" });
     }
 
     return (

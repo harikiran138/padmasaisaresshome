@@ -75,16 +75,15 @@ export default async function ShopPage(props: ShopPageProps) {
                     <main className="flex-1">
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-2xl font-bold text-gray-900">
-                                <h1 className="text-2xl font-bold text-gray-900">
-                                    {searchParams.search
-                                        ? `Search Results for "${searchParams.search}"`
-                                        : searchParams.category
-                                            ? `${searchParams.category} Collection`
-                                            : "All Products"}
-                                </h1>
-                                <span className="text-gray-500 text-sm">
-                                    {serializedProducts.length} Products
-                                </span>
+                                {searchParams.search
+                                    ? `Search Results for "${searchParams.search}"`
+                                    : searchParams.category
+                                        ? `${searchParams.category} Collection`
+                                        : "All Products"}
+                            </h1>
+                            <span className="text-gray-500 text-sm">
+                                {serializedProducts.length} Products
+                            </span>
                         </div>
 
                         {serializedProducts.length === 0 ? (
