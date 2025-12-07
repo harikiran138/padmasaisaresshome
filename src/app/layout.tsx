@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import { CartProvider } from "@/components/shared/CartProvider";
+import { SessionProvider } from "@/components/shared/SessionProvider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -24,9 +25,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.variable} antialiased font-sans flex flex-col min-h-screen`}>
         <CartProvider>
-          <Navbar />
-          <main className="flex-grow">{children}</main>
-          <Footer />
+          <SessionProvider>
+            <Navbar />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+          </SessionProvider>
         </CartProvider>
       </body>
     </html>

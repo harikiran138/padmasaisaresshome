@@ -2,13 +2,26 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ShoppingCart, User, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Menu, X, ShoppingCart, User, Search, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "./CartProvider";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const { cartCount } = useCart();
+    const { data: session } = useSession();
+    const router = useRouter();
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/shop?search=${encodeURIComponent(searchQuery)}`);
+            setIsOpen(false);
+        }
+    };
 
     const navLinks = [
         { name: "Home", href: "/" },
@@ -29,31 +42,54 @@ export default function Navbar() {
                         </span>
                     </Link>
 
-                    {/* Desktop Nav */}
-                    <div className="hidden md:flex space-x-8 items-center">
-                        {navLinks.map((link) => (
-                            <Link
-                                key={link.name}
-                                href={link.href}
-                                className="text-gray-700 hover:text-primary font-medium transition-colors"
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
+                    {/* Desktop Search Bar - Centered */}
+                    <div className="hidden md:flex flex-1 max-w-lg mx-8">
+                        <form onSubmit={handleSearch} className="w-full relative">
+                            <input
+                                type="text"
+                                placeholder="Search for sarees, kurtas..."
+                                className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                        </form>
                     </div>
 
-                    {/* Icons */}
+                    {/* Desktop Nav Actions */}
                     <div className="hidden md:flex items-center space-x-6">
-                        <button className="text-gray-600 hover:text-primary transition-colors">
-                            <Search size={22} />
-                        </button>
-                        <Link href="/account" className="text-gray-600 hover:text-primary transition-colors">
-                            <User size={22} />
-                        </Link>
+                        {session ? (
+                            <div className="flex items-center space-x-4">
+                                <Link href="/account" className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors">
+                                    <User size={20} />
+                                    <span className="font-medium text-sm">Account</span>
+                                </Link>
+                                <button
+                                    onClick={() => signOut()}
+                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                    title="Sign Out"
+                                >
+                                    <LogOut size={20} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center space-x-4 text-sm font-medium">
+                                <Link href="/login" className="text-gray-700 hover:text-primary transition-colors">
+                                    Login
+                                </Link>
+                                <Link
+                                    href="/register"
+                                    className="bg-primary text-white px-5 py-2 rounded-full hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+                                >
+                                    Sign Up
+                                </Link>
+                            </div>
+                        )}
+
                         <Link href="/cart" className="text-gray-600 hover:text-primary transition-colors relative">
                             <ShoppingCart size={22} />
                             {cartCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-bounce-short">
                                     {cartCount}
                                 </span>
                             )}
@@ -72,7 +108,7 @@ export default function Navbar() {
                         </Link>
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="text-gray-700 hover:text-primary focus:outline-none"
+                            className="text-gray-700 hover:text-primary focus:outline-none p-1"
                         >
                             {isOpen ? <X size={28} /> : <Menu size={28} />}
                         </button>
@@ -89,33 +125,74 @@ export default function Navbar() {
                         exit={{ opacity: 0, height: 0 }}
                         className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
                     >
-                        <div className="px-4 pt-2 pb-6 space-y-2">
-                            {navLinks.map((link) => (
-                                <Link
-                                    key={link.name}
-                                    href={link.href}
-                                    onClick={() => setIsOpen(false)}
-                                    className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
-                                >
-                                    {link.name}
-                                </Link>
-                            ))}
-                            <div className="pt-4 border-t border-gray-100 mt-4 flex flex-col space-y-3">
-                                <Link
-                                    href="/account"
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-primary"
-                                >
-                                    <User size={20} />
-                                    <span>My Account</span>
-                                </Link>
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-primary text-left"
-                                >
-                                    <Search size={20} />
-                                    <span>Search</span>
-                                </button>
+                        <div className="px-4 py-4 space-y-4">
+                            {/* Mobile Search */}
+                            <form onSubmit={handleSearch} className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Search products..."
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                <Search className="absolute left-3 top-3.5 text-gray-400" size={20} />
+                            </form>
+
+                            {/* Links */}
+                            <div className="flex flex-col space-y-2">
+                                {navLinks.map((link) => (
+                                    <Link
+                                        key={link.name}
+                                        href={link.href}
+                                        onClick={() => setIsOpen(false)}
+                                        className="block px-3 py-3 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 transition-colors"
+                                    >
+                                        {link.name}
+                                    </Link>
+                                ))}
+                            </div>
+
+                            {/* Mobile Auth */}
+                            <div className="pt-4 border-t border-gray-100 mt-2 space-y-3">
+                                {session ? (
+                                    <>
+                                        <Link
+                                            href="/account"
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex items-center space-x-3 px-3 py-3 rounded-md text-gray-700 hover:bg-gray-50 hover:text-primary"
+                                        >
+                                            <User size={20} />
+                                            <span className="font-medium">My Account</span>
+                                        </Link>
+                                        <button
+                                            onClick={() => {
+                                                signOut();
+                                                setIsOpen(false);
+                                            }}
+                                            className="w-full flex items-center space-x-3 px-3 py-3 rounded-md text-red-500 hover:bg-red-50"
+                                        >
+                                            <LogOut size={20} />
+                                            <span className="font-medium">Sign Out</span>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                        <Link
+                                            href="/login"
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex justify-center items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                                        >
+                                            Login
+                                        </Link>
+                                        <Link
+                                            href="/register"
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex justify-center items-center px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                                        >
+                                            Sign Up
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </motion.div>

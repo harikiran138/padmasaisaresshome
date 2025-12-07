@@ -22,6 +22,16 @@ export default async function ShopPage(props: ShopPageProps) {
         query.category = searchParams.category;
     }
 
+    // Search Filter
+    if (searchParams.search) {
+        const searchRegex = new RegExp(searchParams.search as string, "i");
+        query.$or = [
+            { name: searchRegex },
+            { description: searchRegex },
+            { category: searchRegex },
+        ];
+    }
+
     // Price Filter
     if (searchParams.minPrice || searchParams.maxPrice) {
         query.price = {};
@@ -65,11 +75,16 @@ export default async function ShopPage(props: ShopPageProps) {
                     <main className="flex-1">
                         <div className="flex justify-between items-center mb-6">
                             <h1 className="text-2xl font-bold text-gray-900">
-                                {searchParams.category ? `${searchParams.category} Collection` : "All Products"}
-                            </h1>
-                            <span className="text-gray-500 text-sm">
-                                {serializedProducts.length} Products
-                            </span>
+                                <h1 className="text-2xl font-bold text-gray-900">
+                                    {searchParams.search
+                                        ? `Search Results for "${searchParams.search}"`
+                                        : searchParams.category
+                                            ? `${searchParams.category} Collection`
+                                            : "All Products"}
+                                </h1>
+                                <span className="text-gray-500 text-sm">
+                                    {serializedProducts.length} Products
+                                </span>
                         </div>
 
                         {serializedProducts.length === 0 ? (
