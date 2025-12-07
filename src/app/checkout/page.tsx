@@ -195,9 +195,9 @@ export default function CheckoutPage() {
                         <h2 className="text-xl font-bold mb-6">Your Order</h2>
                         <ul className="space-y-4 mb-6">
                             {cartItems.map(item => (
-                                <li key={`${item.productId}-${item.size}`} className="flex justify-between">
-                                    <span className="text-gray-600">{item.name} x {item.quantity}</span>
-                                    <span className="font-medium">₹{item.price * item.quantity}</span>
+                                <li key={`${item.product._id}-${item.size}`} className="flex justify-between">
+                                    <span className="text-gray-600">{item.product.name} x {item.quantity}</span>
+                                    <span className="font-medium">₹{(item.product.discountPrice || item.product.price) * item.quantity}</span>
                                 </li>
                             ))}
                         </ul>

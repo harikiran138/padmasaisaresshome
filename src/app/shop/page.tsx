@@ -4,11 +4,11 @@ import ProductFilters from "@/components/shop/ProductFilters";
 import ProductCard from "@/components/shop/ProductCard";
 import SortDropdown from "@/components/shop/SortDropdown"; // We'll create this next
 
-export default async function ShopPage({
-    searchParams,
-}: {
-    searchParams: { category?: string; minPrice?: string; maxPrice?: string; sort?: string; q?: string };
+export default async function ShopPage(props: {
+    searchParams: Promise<{ category?: string; minPrice?: string; maxPrice?: string; sort?: string; q?: string }>;
 }) {
+    const searchParams = await props.searchParams;
+
     const products = await getProducts({
         category: searchParams.category,
         minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
