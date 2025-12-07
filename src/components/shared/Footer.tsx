@@ -9,7 +9,7 @@ export default function Footer() {
                     {/* Brand Info */}
                     <div>
                         <h3 className="text-2xl font-bold mb-6">
-                            PADMA SAI <span className="text-secondary">SAREES</span>
+                            PADMA SAI <span className="text-secondary">SAREES HOME</span>
                         </h3>
                         <p className="text-gray-400 mb-6 leading-relaxed">
                             Everyday fashion. Everyday you. We bring you the finest collection of traditional and contemporary wear, crafted with love and tradition.

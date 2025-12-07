@@ -25,7 +25,7 @@ export default function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex-shrink-0 flex items-center">
                         <span className="text-2xl font-bold text-primary tracking-tight">
-                            PADMA SAI <span className="text-secondary">SAREES</span>
+                            PADMA SAI <span className="text-secondary">SAREES HOME</span>
                         </span>
                     </Link>
 
