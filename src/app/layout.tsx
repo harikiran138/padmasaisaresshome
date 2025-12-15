@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} font-sans bg-gray-50 text-gray-900`}>
         <SessionProvider>
           <CartProvider>

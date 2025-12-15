@@ -52,6 +52,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ productId, quantity, size, color }),
             });
+
+            if (res.status === 401) {
+                // User not logged in, redirect to login
+                window.location.href = "/login?callbackUrl=" + encodeURIComponent(pathname);
+                return false;
+            }
+
             if (res.ok) {
                 refreshCart();
                 return true;
