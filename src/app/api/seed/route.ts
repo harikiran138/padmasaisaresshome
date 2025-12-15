@@ -204,20 +204,39 @@ export async function GET() {
 
         const createdProducts = await Product.insertMany(productsData);
 
+        // 2a. Create Extra Users for Reviews
+        const verifyUser = await User.create({
+            name: "Verified Buyer",
+            email: "buyer@example.com",
+            password: hashedPassword,
+            role: "customer"
+        });
+        const guestUser = await User.create({
+            name: "Guest User",
+            email: "guest@example.com",
+            password: hashedPassword,
+            role: "customer"
+        });
+        const reviewers = [demoUser, verifyUser, guestUser];
+
         // 6. Generate Reviews
         let reviewCount = 0;
         for (const product of createdProducts) {
-            const numReviews = Math.floor(Math.random() * 6);
+            const numReviews = Math.floor(Math.random() * 3); // Max 3 reviews since we have 3 users
             if (numReviews > 0) {
                 let totalRating = 0;
+                // Shuffle reviewers for randomness
+                const shuffledReviewers = [...reviewers].sort(() => 0.5 - Math.random());
+
                 for (let i = 0; i < numReviews; i++) {
+                    const reviewer = shuffledReviewers[i];
                     const rating = Math.floor(Math.random() * 2) + 4;
                     totalRating += rating;
 
                     await Review.create({
-                        user: demoUser._id,
+                        user: reviewer._id,
                         product: product._id,
-                        name: demoUser.name,
+                        name: reviewer.name,
                         rating: rating,
                         comment: "Great product! Really satisfied with the quality and delivery.",
                     });
