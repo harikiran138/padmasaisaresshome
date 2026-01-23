@@ -1,4 +1,4 @@
-
+import Image from "next/image";
 import connectToDatabase from "@/lib/db";
 import Banner from "@/models/Banner";
 import Link from "next/link";
@@ -54,7 +54,13 @@ export default async function AdminBannersPage() {
                                         {banner.subtitle && <div className="text-xs text-gray-500">{banner.subtitle}</div>}
                                     </td>
                                     <td className="px-6 py-4 text-sm">
-                                        <img src={banner.imageUrl} alt={banner.title} className="h-10 w-20 object-cover rounded" />
+                                        <Image
+                                            src={banner.imageUrl}
+                                            alt={banner.title}
+                                            width={80}
+                                            height={40}
+                                            className="h-10 w-20 object-cover rounded"
+                                        />
                                     </td>
                                     <td className="px-6 py-4 text-sm text-gray-500 truncate max-w-xs">{banner.linkUrl}</td>
                                     <td className="px-6 py-4 text-sm text-gray-900">{banner.sortOrder}</td>

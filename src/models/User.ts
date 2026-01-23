@@ -32,6 +32,9 @@ export interface IUser extends Document {
         isDefault: boolean;
     }[];
     wishlist?: mongoose.Types.ObjectId[];
+    loginHistory?: { ip: string; device?: string; date: Date }[];
+    refreshToken?: string;
+    isEmailVerified?: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -61,6 +64,13 @@ const UserSchema = new Schema<IUser>(
         image: { type: String },
         addresses: [AddressSchema],
         wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+        loginHistory: [{
+          ip: String,
+          device: String,
+          date: { type: Date, default: Date.now }
+        }],
+        refreshToken: { type: String, select: false },
+        isEmailVerified: { type: Boolean, default: false },
     },
     { timestamps: true }
 );

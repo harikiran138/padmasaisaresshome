@@ -16,10 +16,12 @@
     "mongoose": "^9.0.1",
     "next": "16.0.7",
     "next-auth": "^5.0.0-beta.30",
+    "rate-limiter-flexible": "^9.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.68.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

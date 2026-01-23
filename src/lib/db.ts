@@ -11,64 +11,118 @@ interface MongooseCache {
     promise: Promise<typeof mongoose> | null;
 }
 
-declare global {
-    // Change cache key to bypass potentially stale global state from previous hot reloads
-    var mongoose_cache_v2: MongooseCache | undefined;
-}
+const globalForMongoose = global as unknown as { mongoose: MongooseCache };
 
-let cached = global.mongoose_cache_v2;
+let cached = globalForMongoose.mongoose;
 
 if (!cached) {
-    cached = global.mongoose_cache_v2 = { conn: null, promise: null };
+    cached = globalForMongoose.mongoose = { conn: null, promise: null };
 }
 
 async function connectToDatabase() {
-    console.log("[DB] connectToDatabase called (v2 cache)");
+    console.log("[DB] connectToDatabase called. State:", mongoose.connection.readyState);
 
-    if (cached!.conn) {
-        console.log("[DB] Checking cached connection status, readyState:", cached!.conn.connection.readyState);
-        if (cached!.conn.connection.readyState === 1) {
-            console.log("[DB] Using valid cached connection");
-            return cached!.conn;
+    // 1. If mongoose (global) is connected, use it.
+    // 1. If mongoose (global) is connected, use it.
+    if (mongoose.connection.readyState === 1) {
+        try {
+            if (!mongoose.connection.db) {
+               throw new Error("Global connection ready but db missing");
+            }
+            await mongoose.connection.db.admin().ping();
+            console.log("[DB] Already connected (readyState 1, ping success)");
+            return mongoose.connection;
+        } catch (e) {
+            console.warn("[DB] Global connection zombie. Force closing...", e);
+             try { await mongoose.disconnect(); } catch { /* ignore */ }
+             // Fall through
         }
-        console.log("[DB] Cached connection is not ready (state " + cached!.conn.connection.readyState + "), reconnecting...");
-        cached!.conn = null;
-        cached!.promise = null;
     }
 
-    if (!cached!.promise) {
-        console.log("[DB] No cached promise, creating new connection to:", MONGODB_URI?.substring(0, 15) + "...");
+    // 2. If we have a cached connection that is ready, use it.
+    if (cached.conn && cached.conn.connection.readyState === 1) {
+        try {
+            if (!cached.conn.connection.db) {
+                throw new Error("Connection ready but db object is missing");
+            }
+            await cached.conn.connection.db.admin().ping();
+            console.log("[DB] Using cached connection (readyState 1, ping success)");
+            return cached.conn;
+        } catch (e) {
+            console.warn("[DB] Cached connection is zombie (ping failed). Reconnecting...", e);
+            cached.conn = null;
+            cached.promise = null;
+            // Fall through to create new connection logic
+        }
+    }
+
+    // 3. If we have a cached promise, check if it yields a connected instance.
+    if (cached.promise) {
+        console.log("[DB] Awaiting EXISTING connection promise");
+        try {
+            const conn = await cached.promise;
+            if (conn.connection.readyState === 1) {
+                console.log("[DB] Cached promise resolved to CONNECTED state.");
+                return conn;
+            } else {
+                console.warn("[DB] Cached promise resolved but NOT connected (State: " + conn.connection.readyState + "). Resetting cache.");
+                cached.promise = null;
+                cached.conn = null;
+                // Fall through to create new connection
+            }
+        } catch (e) {
+            console.error("[DB] Cached promise rejected. Resetting cache.", e);
+            cached.promise = null;
+            cached.conn = null;
+            // Fall through to create new connection
+        }
+    }
+
+    // 4. Create a new connection if needed
+    if (!cached.promise) {
         const opts = {
             bufferCommands: true,
-            serverSelectionTimeoutMS: 5000, // Fail faster if DB is unreachable
-            socketTimeoutMS: 45000,
+            serverSelectionTimeoutMS: 5000,
+            heartbeatFrequencyMS: 1000,
         };
 
-        cached!.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-            console.log("[DB] New connection established successfully");
-            return mongoose;
+        console.log("[DB] Starting NEW mongoose.connect to:", MONGODB_URI?.substring(0, 25));
+        
+        
+
+        cached.promise = mongoose.connect(MONGODB_URI!, opts).then((m) => {
+            console.log("[DB] Promise resolved. New State:", m.connection.readyState);
+            return m;
         }).catch(err => {
-            console.error("[DB] Connection error:", err);
-            // Verify if URI is correct/whitelist issues
-            if (err.name === 'MongooseServerSelectionError') {
-                console.error("[DB] Could not connect to any servers. Check IP whitelist and URI.");
-            }
-            cached!.promise = null; // Reset promise so next try can happen
+            console.error("[DB] Promise REJECTED:", err.message);
+            cached.promise = null;
             throw err;
         });
+        
+        console.log("[DB] mongoose.connect call initiated");
     }
 
+    // 5. Await the new or existing promise
     try {
-        console.log("[DB] Awaiting connection promise...");
-        cached!.conn = await cached!.promise;
-        console.log("[DB] Connection promise resolved");
-    } catch (e) {
-        console.error("[DB] Failure in awaiting connection:", e);
-        cached!.promise = null;
+        console.log("[DB] Awaiting cached.promise (fresh or existing)...");
+        const conn = await cached.promise;
+        
+        if (conn && conn.connection.readyState === 1) {
+            cached.conn = conn;
+            console.log("[DB] Connection established and cached.");
+        }
+        
+        return conn;
+    } catch (e: unknown) {
+        if (e instanceof Error) {
+            console.error("[DB] Await failed:", e.message);
+        } else {
+             console.error("[DB] Await failed with non-Error object");
+        }
+        cached.promise = null;
+        cached.conn = null;
         throw e;
     }
-
-    return cached!.conn;
 }
 
 export default connectToDatabase;

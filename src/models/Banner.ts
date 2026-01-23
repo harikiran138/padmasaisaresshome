@@ -21,7 +21,7 @@ const BannerSchema = new Schema<IBanner>(
         isActive: { type: Boolean, default: true },
         sortOrder: { type: Number, default: 0 },
     },
-    { timestamps: true }
+    { timestamps: true, bufferCommands: true }
 );
 
 export default mongoose.models.Banner || mongoose.model<IBanner>("Banner", BannerSchema);

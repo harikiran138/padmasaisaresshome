@@ -62,10 +62,7 @@ export default async function AdminCategoriesPage() {
                                         </Link>
                                         <form action={deleteCategory}>
                                             <input type="hidden" name="id" value={category._id.toString()} />
-                                            <button type="submit" className="p-2 text-red-600 hover:bg-red-50 rounded-full" onClick={() => {
-                                                // Ideally confirm dialog, but server action needs client wrapper for confirm. 
-                                                // Keeping simple as per request flow "Delete product".
-                                            }}>
+                                            <button type="submit" className="p-2 text-red-600 hover:bg-red-50 rounded-full">
                                                 <Trash2 size={16} />
                                             </button>
                                         </form>

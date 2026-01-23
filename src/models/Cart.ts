@@ -12,9 +12,7 @@ export interface ICart extends Document {
     user?: mongoose.Types.ObjectId;
     sessionId?: string; // For guest users if we implement that later
     items: ICartItem[];
-    totalConfig?: {
-        subtotal: number;
-    };
+    lastKnownTotal?: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -29,11 +27,20 @@ const CartItemSchema = new Schema({
 
 const CartSchema = new Schema<ICart>(
     {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true, sparse: true },
+        sessionId: { type: String, unique: true, sparse: true },
         items: [CartItemSchema],
+        lastKnownTotal: Number
     },
     { timestamps: true }
 );
+
+// Unified index to find by either but ensure one is present
+CartSchema.index({ user: 1 }, { unique: true, sparse: true });
+CartSchema.index({ sessionId: 1 }, { unique: true, sparse: true });
+
+// TTL Index: Auto-delete carts after 30 days
+CartSchema.index({ updatedAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
 
 

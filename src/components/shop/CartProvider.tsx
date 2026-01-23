@@ -1,11 +1,11 @@
-
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { useToast } from "@/components/providers/ToastProvider";
 
 interface CartItem {
-    product: any; // Using any for flexibility or shared interface
+    product: any;
     quantity: number;
     size?: string;
     color?: string;
@@ -16,6 +16,7 @@ interface CartContextType {
     cartItems: CartItem[];
     cartCount: number;
     subtotal: number;
+    isLoading: boolean;
     refreshCart: () => Promise<void>;
     addToCart: (productId: string, quantity: number, size?: string, color?: string) => Promise<boolean>;
     updateQuantity: (productId: string, quantity: number, size: string, color: string) => Promise<void>;
@@ -27,56 +28,92 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const pathname = usePathname();
+    const { showToast } = useToast();
 
-    const refreshCart = async () => {
+    // Session Management
+    const [sessionId, setSessionId] = useState<string | null>(null);
+
+    useEffect(() => {
+        let sid = localStorage.getItem("cart_session_id");
+        if (!sid) {
+            sid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem("cart_session_id", sid);
+        }
+        setSessionId(sid);
+    }, []);
+
+    const fetchHeaders = useCallback(() => {
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+        };
+        const sid = localStorage.getItem("cart_session_id");
+        if (sid) {
+            headers["x-session-id"] = sid;
+        }
+        return headers;
+    }, []);
+
+    const refreshCart = useCallback(async () => {
+        const sid = localStorage.getItem("cart_session_id");
+        if (!sid) return;
+
         try {
-            const res = await fetch("/api/cart");
+            setIsLoading(true);
+            const res = await fetch("/api/cart", {
+                headers: fetchHeaders()
+            });
             if (res.ok) {
                 const data = await res.json();
-                setCartItems(data.items || []);
+                setCartItems(data?.items || []);
             }
         } catch (error) {
             console.error("Failed to fetch cart:", error);
+        } finally {
+            setIsLoading(false);
         }
-    };
+    }, [fetchHeaders]);
 
     useEffect(() => {
-        refreshCart();
-    }, [pathname]); // Refresh on route change to keep consistent
+        if (sessionId) {
+            refreshCart();
+        }
+    }, [sessionId, refreshCart, pathname]);
 
     const addToCart = async (productId: string, quantity: number, size?: string, color?: string) => {
         try {
             const res = await fetch("/api/cart", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: fetchHeaders(),
                 body: JSON.stringify({ productId, quantity, size, color }),
             });
 
-            if (res.status === 401) {
-                // User not logged in, redirect to login
-                window.location.href = "/login?callbackUrl=" + encodeURIComponent(pathname);
+            if (res.ok) {
+                await refreshCart();
+                showToast("success", "Exquisite Choice", "Item added to your collection.");
+                return true;
+            } else {
+                const error = await res.json();
+                showToast("error", "Selection Error", error.message || "Could not add to cart.");
                 return false;
             }
-
-            if (res.ok) {
-                refreshCart();
-                return true;
-            }
         } catch (error) {
-            console.error("Add to cart error:", error);
+            showToast("error", "System Error", "A minor interruption occurred. Please try again.");
+            return false;
         }
-        return false;
     };
 
     const updateQuantity = async (productId: string, quantity: number, size: string, color: string) => {
         try {
-            await fetch("/api/cart", {
+            const res = await fetch("/api/cart", {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: fetchHeaders(),
                 body: JSON.stringify({ productId, quantity, size, color }),
             });
-            refreshCart();
+            if (res.ok) {
+                await refreshCart();
+            }
         } catch (error) {
             console.error(error);
         }
@@ -84,35 +121,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const removeFromCart = async (productId: string, size: string, color: string) => {
         try {
-            await fetch("/api/cart", {
+            const res = await fetch("/api/cart", {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: fetchHeaders(),
                 body: JSON.stringify({ productId, size, color }),
             });
-            refreshCart();
+            if (res.ok) {
+                await refreshCart();
+                showToast("info", "Cart Updated", "Item removed from your bag.");
+            }
         } catch (error) {
             console.error(error);
         }
     };
 
-    const clearCart = async () => {
+    const clearCart = () => {
         setCartItems([]);
-        try {
-            // Optional: Call API if you have a clear cart endpoint, or relying on checkout to clear backend
-        } catch (error) {
-            console.error(error);
-        }
+        // Local state clear is usually enough after successful checkout
     };
 
     const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
     const subtotal = cartItems.reduce((acc, item) => {
-        const price = item.product.discountPrice || item.product.price;
-        const extra = 0; // If you implement variant price logic later
-        return acc + (price + extra) * item.quantity;
+        const price = item.product?.discountPrice || item.product?.price || 0;
+        return acc + price * item.quantity;
     }, 0);
 
     return (
-        <CartContext.Provider value={{ cartItems, cartCount, subtotal, refreshCart, addToCart, updateQuantity, removeFromCart, clearCart }}>
+        <CartContext.Provider value={{ 
+            cartItems, 
+            cartCount, 
+            subtotal, 
+            isLoading,
+            refreshCart, 
+            addToCart, 
+            updateQuantity, 
+            removeFromCart, 
+            clearCart 
+        }}>
             {children}
         </CartContext.Provider>
     );

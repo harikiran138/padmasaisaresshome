@@ -26,6 +26,8 @@ export interface IProduct extends Document {
     numReviews: number;
     currency: string;
     isActive: boolean;
+    inventoryLog: { date: Date; quantity: number; reason: string }[];
+    deletedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -72,6 +74,12 @@ const ProductSchema = new Schema<IProduct>(
         isBestSeller: { type: Boolean, default: false },
         averageRating: { type: Number, default: 0 },
         numReviews: { type: Number, default: 0 },
+        inventoryLog: [{
+          date: { type: Date, default: Date.now },
+          quantity: { type: Number, required: true },
+          reason: { type: String, required: true }
+        }],
+        deletedAt: { type: Date },
     },
     { timestamps: true }
 );

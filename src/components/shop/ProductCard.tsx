@@ -1,10 +1,14 @@
+"use client";
+
+import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, Heart, Star } from "lucide-react";
+import { ShoppingCart, Star, Eye } from "lucide-react";
 import { IProduct } from "@/models/Product";
 import WishlistButton from "../shared/WishlistButton";
+import { motion } from "framer-motion";
 
 interface ProductCardProps {
-    product: Partial<IProduct> & { _id: string }; // flexible type
+    product: Partial<IProduct> & { _id: string };
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -12,63 +16,103 @@ export default function ProductCard({ product }: ProductCardProps) {
         ? Math.round(((product.price! - product.discountPrice) / product.price!) * 100)
         : 0;
 
+    const isHot = product.isFeatured || (product.numReviews && product.numReviews > 10);
+
     return (
-        <div className="group bg-white rounded-lg border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
-            <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
-                <img
-                    src={product.images?.[0] || "/placeholder.jpg"}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                {discountPercentage > 0 && (
-                    <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-sm">
-                        {discountPercentage}% OFF
-                    </span>
-                )}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="group relative bg-white rounded-sm overflow-hidden border border-gray-100/50 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500"
+        >
+            {/* Image Container */}
+            <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
+                <Link href={`/product/${product.slug}`}>
+                    <Image
+                        src={product.images?.[0] || "/placeholder.jpg"}
+                        alt={product.name || "Product Image"}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                    />
+                </Link>
+
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+                    {discountPercentage > 0 && (
+                        <span className="bg-accent text-white text-[10px] font-black px-2 py-1 tracking-widest uppercase">
+                            {discountPercentage}% OFF
+                        </span>
+                    )}
+                    {isHot && (
+                        <span className="bg-secondary text-black text-[10px] font-black px-2 py-1 tracking-widest uppercase">
+                            Trending
+                        </span>
+                    )}
+                </div>
+
+                {/* Quick Actions overlay */}
+                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                    <Link 
+                        href={`/product/${product.slug}`}
+                        className="p-3 bg-white text-gray-900 rounded-full hover:bg-primary hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 duration-300"
+                    >
+                        <Eye size={20} />
+                    </Link>
+                    <button className="p-3 bg-white text-gray-900 rounded-full hover:bg-primary hover:text-white transition-colors transform translate-y-4 group-hover:translate-y-0 duration-500 delay-75 shadow-lg">
+                        <ShoppingCart size={20} />
+                    </button>
+                </div>
+
+                <div className="absolute top-3 right-3 z-10">
                     <WishlistButton productId={product._id} />
                 </div>
             </div>
 
-            <div className="p-4">
-                <h3 className="text-gray-900 font-medium text-lg leading-tight truncate mb-1">
-                    <Link href={`/product/${product.slug}`}>
-                        <span aria-hidden="true" className="absolute inset-0" />
-                        {product.name}
-                    </Link>
-                </h3>
-                <p className="text-gray-500 text-sm mb-1">{product.brand || "No Brand"}</p>
-                <p className="text-xs text-gray-400 mb-2">
-                    {(product.category as any)?.name || (typeof product.category === 'string' ? product.category : "")}
-                </p>
-
-                {/* Rating */}
-                <div className="flex items-center space-x-1 mb-3">
-                    <div className="flex text-yellow-400">
-                        <Star size={14} fill={product.averageRating && product.averageRating >= 4 ? "currentColor" : "none"} className={product.averageRating && product.averageRating >= 4 ? "" : "text-gray-300"} />
-                        <span className="text-xs text-gray-500 ml-1 font-medium">{product.averageRating ? product.averageRating.toFixed(1) : "New"}</span>
+            {/* Content */}
+            <div className="p-5">
+                <div className="mb-1 flex justify-between items-start">
+                    <div>
+                        <p className="text-[10px] text-secondary font-bold uppercase tracking-widest mb-1">
+                            {product.brand || "Artisan Collection"}
+                        </p>
+                        <h3 className="text-gray-900 font-bold text-base leading-snug line-clamp-1 hover:text-primary transition-colors">
+                            <Link href={`/product/${product.slug}`}>
+                                {product.name}
+                            </Link>
+                        </h3>
                     </div>
-                    {product.numReviews ? (
-                        <span className="text-xs text-gray-400">({product.numReviews})</span>
-                    ) : null}
                 </div>
 
-                <div className="flex items-end justify-between">
+                <div className="flex items-center space-x-1 mb-4">
+                    <div className="flex text-secondary">
+                        {[...Array(5)].map((_, i) => (
+                            <Star 
+                                key={i} 
+                                size={12} 
+                                fill={i < Math.floor(product.averageRating || 4) ? "currentColor" : "none"} 
+                                className={i < Math.floor(product.averageRating || 4) ? "" : "text-gray-200"}
+                            />
+                        ))}
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-medium">({product.numReviews || 0})</span>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                     <div>
                         {product.discountPrice ? (
-                            <div className="flex flex-col">
-                                <span className="text-gray-400 line-through text-sm">₹{product.price}</span>
-                                <span className="text-secondary font-bold text-lg">₹{product.discountPrice}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-primary font-black text-xl">₹{product.discountPrice.toLocaleString()}</span>
+                                <span className="text-gray-400 line-through text-xs font-medium">₹{product.price?.toLocaleString()}</span>
                             </div>
                         ) : (
-                            <span className="text-gray-900 font-bold text-lg">₹{product.price}</span>
+                            <span className="text-primary font-black text-xl">₹{product.price?.toLocaleString()}</span>
                         )}
                     </div>
-                    <button className="relative z-10 p-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
-                        <ShoppingCart size={20} />
-                    </button>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
+

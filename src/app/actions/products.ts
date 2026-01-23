@@ -7,10 +7,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { writeFile } from "fs/promises";
 import path from "path";
+import { productSchema } from "@/lib/validations/product";
+import { productService } from "@/server/services/product.service";
 
 async function handleFileUpload(formData: FormData): Promise<string | null> {
     const file = formData.get("file") as File;
     if (!file || file.size === 0) return null;
+
+    // Validate mime type
+    if (!file.type.startsWith("image/")) {
+        throw new Error("Invalid file type. Only images are allowed.");
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = Date.now() + "_" + file.name.replace(/\s/g, "_");
@@ -25,97 +32,65 @@ export async function createProduct(formData: FormData) {
     try {
         await connectToDatabase();
 
-        const name = formData.get("name") as string;
-        const price = Number(formData.get("price"));
-        const category = formData.get("category") as string;
-        const brand = formData.get("brand") as string;
-        const description = formData.get("description") as string;
-        const stock = Number(formData.get("stock"));
-        let image = formData.get("image") as string;
-        const isActive = formData.get("isActive") === "on";
+        // 1. Extract raw data
+        const rawData = {
+            name: formData.get("name"),
+            price: Number(formData.get("price")),
+            category: formData.get("category"),
+            brand: formData.get("brand"),
+            description: formData.get("description"),
+            stock: Number(formData.get("stock")),
+            images: [formData.get("image") as string], // Initial
+            isActive: formData.get("isActive") === "on",
+            variants: formData.get("variants") ? JSON.parse(formData.get("variants") as string) : [],
+            attributes: formData.get("attributes") ? JSON.parse(formData.get("attributes") as string) : {},
+        };
 
+        // 2. Handle File Upload (if present) to update images
         const uploadedImagePath = await handleFileUpload(formData);
         if (uploadedImagePath) {
-            image = uploadedImagePath;
+            rawData.images = [uploadedImagePath];
         }
 
-        // Parse Variants
-        const variantsJson = formData.get("variants") as string;
-        const variants = variantsJson ? JSON.parse(variantsJson) : [];
+        // 3. Zod Validation
+        const validatedData = productSchema.parse(rawData);
 
-        // Parse Attributes
-        const attributesJson = formData.get("attributes") as string;
-        const attributesMap = attributesJson ? JSON.parse(attributesJson) : {};
-
-        const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-" + Date.now();
-
-        await Product.create({
-            name,
-            slug,
-            price,
-            category, // ObjectId
-            brand,
-            description,
-            stock, // Base stock
-            images: [image],
-            isActive,
-            currency: "INR",
-            variants,
-            attributes: attributesMap,
-            // Legacy fields for backward compatibility or simple products
-            sizes: variants.map((v: any) => v.size).filter(Boolean),
-            colors: variants.map((v: any) => v.color).filter(Boolean),
-        });
+        // 4. Create Product via Service
+        await productService.createProduct(validatedData);
 
         revalidatePath("/admin/products");
     } catch (error) {
         console.error("Create Product Error:", error);
-        throw new Error("Failed to create product");
+        throw new Error(error instanceof Error ? error.message : "Failed to create product");
     }
 }
 
 export async function updateProduct(formData: FormData) {
     try {
-        await connectToDatabase();
-
         const id = formData.get("id") as string;
-        const name = formData.get("name") as string;
-        const price = Number(formData.get("price"));
-        const category = formData.get("category") as string;
-        const brand = formData.get("brand") as string;
-        const description = formData.get("description") as string;
-        const stock = Number(formData.get("stock"));
-        let image = formData.get("image") as string;
-        const isActive = formData.get("isActive") === "on";
+
+        const rawData = {
+           name: formData.get("name"),
+           price: Number(formData.get("price")),
+           category: formData.get("category"),
+           brand: formData.get("brand"),
+           description: formData.get("description"),
+           stock: Number(formData.get("stock")),
+           images: [formData.get("image") as string],
+           isActive: formData.get("isActive") === "on",
+           variants: formData.get("variants") ? JSON.parse(formData.get("variants") as string) : [],
+           attributes: formData.get("attributes") ? JSON.parse(formData.get("attributes") as string) : {},
+       };
 
         const uploadedImagePath = await handleFileUpload(formData);
         if (uploadedImagePath) {
-            image = uploadedImagePath;
+            rawData.images = [uploadedImagePath];
         }
 
-        // Parse Variants
-        const variantsJson = formData.get("variants") as string;
-        const variants = variantsJson ? JSON.parse(variantsJson) : [];
+       const validatedData = productSchema.parse(rawData);
 
-        // Parse Attributes
-        const attributesJson = formData.get("attributes") as string;
-        const attributesMap = attributesJson ? JSON.parse(attributesJson) : {};
-
-        await Product.findByIdAndUpdate(id, {
-            name,
-            price,
-            category,
-            brand,
-            description,
-            stock,
-            images: [image], // Basic image handling for now
-            isActive,
-            variants,
-            attributes: attributesMap,
-            // Legacy sync
-            sizes: variants.map((v: any) => v.size).filter(Boolean),
-            colors: variants.map((v: any) => v.color).filter(Boolean),
-        });
+       // Service Call
+       await productService.updateProduct(id, validatedData);
 
         revalidatePath("/admin/products");
     } catch (error) {

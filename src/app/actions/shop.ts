@@ -1,4 +1,3 @@
-
 "use server";
 
 import connectToDatabase from "@/lib/db";
@@ -6,46 +5,42 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import Banner from "@/models/Banner";
 
-export async function getFeaturedProducts() {
-    await connectToDatabase();
-    // Assuming 'isFeatured' or just grabbing latest/random for now if no featured flag
-    // The user mentioned "Featured products (best-sellers, new)"
-    // We added isFeatured in seed, let's try to use that, or fallback to latest
-    const products = await Product.find({ isActive: true }) // Add { isFeatured: true } if schema has it, or just limit
-        .sort({ createdAt: -1 })
-        .limit(8)
-        .populate("category", "slug name")
-        .lean();
-
-    return products.map(p => ({
-        ...p,
-        _id: p._id.toString(),
-        category: p.category ? { ...p.category, _id: p.category._id.toString() } : null,
-    }));
+export async function getBanners() {
+  await connectToDatabase();
+  try {
+      const banners = await Banner.find({ isActive: true }).sort({ sortOrder: 1 }).lean();
+      return JSON.parse(JSON.stringify(banners));
+  } catch (error) {
+      console.error("Error fetching banners:", error);
+      return [];
+  }
 }
 
 export async function getCategories() {
-    await connectToDatabase();
-    const categories = await Category.find({ isActive: true })
-        .sort({ name: 1 })
-        .lean();
-
-    return categories.map(c => ({
-        ...c,
-        _id: c._id.toString(),
-    }));
+  await connectToDatabase();
+  try {
+      const categories = await Category.find({ isActive: true }).sort({ name: 1 }).lean();
+      return JSON.parse(JSON.stringify(categories));
+  } catch (error) {
+      console.error("Error fetching categories:", error);
+      return [];
+  }
 }
 
-export async function getBanners() {
-    await connectToDatabase();
-    const banners = await Banner.find({ isActive: true })
-        .sort({ sortOrder: 1 })
+export async function getFeaturedProducts() {
+  await connectToDatabase();
+  try {
+      const products = await Product.find({ isActive: true, isFeatured: true })
+        .populate("category")
+        .sort({ createdAt: -1 })
+        .limit(8)
         .lean();
 
-    return banners.map(b => ({
-        ...b,
-        _id: b._id.toString(),
-    }));
+    return JSON.parse(JSON.stringify(products));
+  } catch (error) {
+      console.error("Error fetching featured products:", error);
+      return [];
+  }
 }
 
 export async function getProducts({
@@ -92,33 +87,31 @@ export async function getProducts({
     if (sort === "price_desc") sortOption = { price: -1 };
     if (sort === "newest") sortOption = { createdAt: -1 };
 
-    const products = await Product.find(query)
-        .sort(sortOption)
-        .populate("category", "slug name")
-        .lean();
+    try {
+        const products = await Product.find(query)
+            .sort(sortOption)
+            .populate("category", "slug name")
+            .lean();
 
-    return products.map(p => ({
-        ...p,
-        _id: p._id.toString(),
-        category: p.category ? { ...p.category, _id: p.category._id.toString() } : null,
-        createdAt: p.createdAt?.toISOString(),
-        updatedAt: p.updatedAt?.toISOString(),
-    }));
+        return JSON.parse(JSON.stringify(products));
+    } catch (error) {
+        console.error("Error fetching products:", error);
+        return [];
+    }
 }
 
 export async function getProductBySlug(slug: string) {
     await connectToDatabase();
-    const product = await Product.findOne({ slug, isActive: true })
-        .populate("category", "name slug")
-        .lean();
+    try {
+        const product = await Product.findOne({ slug, isActive: true })
+            .populate("category", "name slug")
+            .lean();
 
-    if (!product) return null;
+        if (!product) return null;
 
-    return {
-        ...product,
-        _id: product._id.toString(),
-        category: product.category ? { ...product.category, _id: product.category._id.toString() } : null,
-        createdAt: product.createdAt?.toISOString(),
-        updatedAt: product.updatedAt?.toISOString(),
-    };
+        return JSON.parse(JSON.stringify(product));
+    } catch (error) {
+        console.error("Error fetching product by slug:", error);
+        return null;
+    }
 }

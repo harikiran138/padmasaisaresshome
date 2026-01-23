@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IOrder extends Document {
-    user: mongoose.Types.ObjectId;
+    user?: mongoose.Types.ObjectId;
+    sessionId?: string;
+    guestEmail?: string;
     items: {
         product: mongoose.Types.ObjectId;
         name: string;
@@ -27,6 +29,8 @@ export interface IOrder extends Document {
         country: string;
         phone: string;
     };
+    orderId: string; // Readable ID
+    auditLog: { status: string; timestamp: Date; note: string }[];
     paymentId?: string;
     paymentOrderId?: string;
     paymentSignature?: string;
@@ -62,10 +66,12 @@ const orderItemSchema = new Schema(
 
 const OrderSchema = new Schema<IOrder>(
     {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
+        sessionId: { type: String, index: true },
+        guestEmail: { type: String },
         items: {
             type: [orderItemSchema],
-            validate: (v: any[]) => v.length > 0,
+            validate: (v: unknown[]) => v.length > 0,
         },
         subtotal: { type: Number, required: true, min: 0 },
         shippingFee: { type: Number, required: true, min: 0, default: 0 },
@@ -89,6 +95,12 @@ const OrderSchema = new Schema<IOrder>(
             index: true,
         },
         shippingAddress: { type: shippingAddressSchema, required: true },
+        orderId: { type: String, unique: true, required: true },
+        auditLog: [{
+            status: String,
+            timestamp: { type: Date, default: Date.now },
+            note: String
+        }],
         paymentId: { type: String },
         paymentOrderId: { type: String },
         paymentSignature: { type: String },
